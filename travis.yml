@@ -4,6 +4,7 @@ git:
   depth: false
 cache: bundler
 before_install:
+ - rm -f Gemfile.lock
  - wget https://raw.githubusercontent.com/progit/progit2-pub/master/Gemfile
  - wget https://raw.githubusercontent.com/progit/progit2-pub/master/Rakefile
  - bundle install
