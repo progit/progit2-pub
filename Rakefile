@@ -40,10 +40,11 @@ namespace :book do
       end
       new_patchlevel= last_version.split('.')[-1].to_i + 1
       new_version="2.1.#{new_patchlevel}"
-      @octokit.create_tag(repo, new_version, "Version " + new_version, ENV['TRAVIS_COMMIT'],
+      obj = @octokit.create_tag(repo, new_version, "Version " + new_version, ENV['TRAVIS_COMMIT'],
                           'commit',
                           'Automatic build', 'automatic@no-domain.org',
                           Time.now.utc.iso8601)
+      @octokit.create_ref(repo, "tags/#{new_version}", obj.sha)
       p "Created tag #{new_version}"
     else
       p 'This only runs on a commit to master'
