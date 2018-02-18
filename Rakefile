@@ -1,3 +1,6 @@
+# coding: utf-8
+require 'octokit'
+
 namespace :book do
   desc 'build basic book formats'
   task :build do
@@ -22,6 +25,27 @@ namespace :book do
     puts "Converting to PDF... (this one takes a while)"
     `bundle exec asciidoctor-pdf progit.asc 2>/dev/null`
     puts " -- PDF output at progit.pdf"
+  end
+
+  desc 'tag the repo with the latest version'
+  task :tag do
+    api_token = ENV['GITHUB_API_TOKEN']
+    if (api_token && (ENV['TRAVIS_PULL_REQUEST'] == 'false') && (ENV['TRAVIS_BRANCH']=='master'))
+      repo = ENV['TRAVIS_REPO_SLUG']
+      @octokit = Octokit::Client.new(:access_token => api_token)
+      begin
+        last_version=@octokit.latest_release(repo).tag_name
+      rescue
+        last_version="2.1.-1"
+      end
+      new_patchlevel= last_version.split('.')[-1].to_i + 1
+      new_version="2.1.#{new_patchlevel}"
+      @octokit.create_tag(repo, new_version, "Version " + new_version, ENV['TRAVIS_COMMIT'],
+                          'commit', 'Automatic build', 'automatic@no-domain.org')
+      p "Created tag #{new_version}"
+    else
+      p 'This only runs on a commit to master'
+    end
   end
 
   desc 'convert book to asciidoctor compatibility'
