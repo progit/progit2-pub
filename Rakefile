@@ -30,7 +30,7 @@ namespace :book do
   desc 'tag the repo with the latest version'
   task :tag do
     api_token = ENV['GITHUB_API_TOKEN']
-    if (api_token && (ENV['TRAVIS_PULL_REQUEST'] == 'false') && (ENV['TRAVIS_BRANCH']=='master'))
+    if (api_token && (ENV['TRAVIS_PULL_REQUEST'] == 'false') && (ENV['TRAVIS_BRANCH']=='master') && !ENV['TRAVIS_TAG'])
       repo = ENV['TRAVIS_REPO_SLUG']
       @octokit = Octokit::Client.new(:access_token => api_token)
       begin
