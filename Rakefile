@@ -1,34 +1,41 @@
 # coding: utf-8
 require 'octokit'
 
+def exec_or_raise(command)
+  puts `#{command}`
+  if (! $?.success?)
+    raise "'#{command}' failed"
+  end
+end
+
 namespace :book do
   desc 'build basic book formats'
   task :build do
 
     puts "Generating contributors list"
-    `git shortlog -s --all| grep -v -E "(Straub|Chacon)" | cut -f 2- | column -c 120 > book/contributors.txt`
+    exec_or_raise("git shortlog -s --all| grep -v -E '(Straub|Chacon)' | cut -f 2- | column -c 120 > book/contributors.txt")
 
     puts "Converting to HTML..."
-    `bundle exec asciidoctor progit.asc`
+    exec_or_raise("bundle exec asciidoctor progit.asc")
     puts " -- HTML output at progit.html"
 
     puts "Converting to EPub..."
-    `bundle exec asciidoctor-epub3 progit.asc`
+    exec_or_raise("bundle exec asciidoctor-epub3 progit.asc")
     puts " -- Epub output at progit.epub"
 
-    sh "epubcheck progit.epub"
+    exec_or_raise("epubcheck progit.epub")
 
     puts "Converting to Mobi (kf8)..."
-    `bundle exec asciidoctor-epub3 -a ebook-format=kf8 progit.asc`
+    exec_or_raise("bundle exec asciidoctor-epub3 -a ebook-format=kf8 progit.asc")
     puts " -- Mobi output at progit.mobi"
 
     repo = ENV['TRAVIS_REPO_SLUG']
     puts "Converting to PDF... (this one takes a while)"
     if (repo == "progit/progit2-zh")
-      `asciidoctor-pdf-cjk-kai_gen_gothic-install`
-      `bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc`
+      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
+      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc")
     else
-      `bundle exec asciidoctor-pdf progit.asc 2>/dev/null`
+      exec_or_raise("bundle exec asciidoctor-pdf progit.asc 2>/dev/null")
     end
     puts " -- PDF output at progit.pdf"
   end
