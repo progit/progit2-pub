@@ -22,10 +22,16 @@ namespace :book do
     `bundle exec asciidoctor-epub3 -a ebook-format=kf8 progit.asc`
     puts " -- Mobi output at progit.mobi"
 
+    repo = ENV['TRAVIS_REPO_SLUG']
     puts "Converting to PDF... (this one takes a while)"
-    `bundle exec asciidoctor-pdf progit.asc 2>/dev/null`
+    if (repo == "progit/progit2-zh")
+      `asciidoctor-pdf-cjk-kai_gen_gothic-install`
+      `bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc`
+    else
+      `bundle exec asciidoctor-pdf progit.asc 2>/dev/null`
+    end
     puts " -- PDF output at progit.pdf"
-  end
+  end1
 
   desc 'tag the repo with the latest version'
   task :tag do
