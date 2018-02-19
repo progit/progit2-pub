@@ -30,7 +30,7 @@ namespace :book do
   desc 'tag the repo with the latest version'
   task :tag do
     api_token = ENV['GITHUB_API_TOKEN']
-    if (api_token && (ENV['TRAVIS_PULL_REQUEST'] == 'false') && (ENV['TRAVIS_BRANCH']=='master') && !ENV['TRAVIS_TAG'])
+    if (api_token && (ENV['TRAVIS_PULL_REQUEST'] == 'false') && (ENV['TRAVIS_BRANCH']=='master'))
       repo = ENV['TRAVIS_REPO_SLUG']
       @octokit = Octokit::Client.new(:access_token => api_token)
       begin
@@ -114,7 +114,8 @@ namespace :book do
       p files
       files.each { |filename|
         content = File.read(filename)
-        new_contents = content.gsub(/\[\[(.*?)\]\]/, '[[r\1]]').gsub(/<<(.*?)>>/) { |match|
+        new_contents = content.gsub(/\[\[(.*?)\]\]/, '[[r\1]]').gsub(
+          "&rarr;", "→").gsub(/<<(.*?)>>/) { |match|
           ch = crossrefs[$1]
           h = headrefs[$1]
           # p " #{match} -> #{ch}, #{h}"
@@ -147,9 +148,11 @@ namespace :book do
         content = File.read (filename)
         new_contents = content.gsub(/include::(.*?)asc/) {|match|
           "include::book/#{num}-#{title}/#{$1}asc"}
+        `git rm #{filename}`
         File.open("#{chap}.asc", "w") {|file|
           file.puts "[##{chap}]\n"
           file.puts new_contents }
+        `git add "#{chap}.asc"`
       }
     }
   end
