@@ -31,7 +31,7 @@ namespace :book do
       `bundle exec asciidoctor-pdf progit.asc 2>/dev/null`
     end
     puts " -- PDF output at progit.pdf"
-  end1
+  end
 
   desc 'tag the repo with the latest version'
   task :tag do
