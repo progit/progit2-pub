@@ -26,7 +26,7 @@ namespace :book do
     puts "Converting to PDF... (this one takes a while)"
     if (repo == "progit/progit2-zh")
       `asciidoctor-pdf-cjk-kai_gen_gothic-install`
-      `bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc`
+      `bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc`
     else
       `bundle exec asciidoctor-pdf progit.asc 2>/dev/null`
     end
