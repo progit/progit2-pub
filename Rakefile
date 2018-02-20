@@ -15,32 +15,44 @@ namespace :book do
     puts "Generating contributors list"
     exec_or_raise("git shortlog -s --all| grep -v -E '(Straub|Chacon)' | cut -f 2- | column -c 120 > book/contributors.txt")
 
+    # detect if the deployment is using glob
+    travis = File.read(".travis.yml")
+    version_string = ENV['TRAVIS_TAG'] || '0'
+    if travis.match(/file_glob/)
+      progit_v = "progit_v#{version_string}"
+    else
+      progit_v = "progit"
+    end
+    text = File.read('progit.asc')
+    new_contents = text.gsub("$$VERSION$$", version_string).gsub("$$DATE$$", Time.now.strftime("%Y-%m-%d"))
+    File.open("#{progit_v}.asc", "w") {|file| file.puts new_contents }
+
     puts "Converting to HTML..."
-    exec_or_raise("bundle exec asciidoctor progit.asc")
-    puts " -- HTML output at progit.html"
+    exec_or_raise("bundle exec asciidoctor #{progit_v}.asc")
+    puts " -- HTML output at #{progit_v}.html"
 
     puts "Converting to EPub..."
-    exec_or_raise("bundle exec asciidoctor-epub3 progit.asc")
-    puts " -- Epub output at progit.epub"
+    exec_or_raise("bundle exec asciidoctor-epub3 #{progit_v}.asc")
+    puts " -- Epub output at #{progit_v}.epub"
 
-    exec_or_raise("epubcheck progit.epub")
+    exec_or_raise("epubcheck #{progit_v}.epub")
 
     puts "Converting to Mobi (kf8)..."
-    exec_or_raise("bundle exec asciidoctor-epub3 -a ebook-format=kf8 progit.asc")
-    puts " -- Mobi output at progit.mobi"
+    exec_or_raise("bundle exec asciidoctor-epub3 -a ebook-format=kf8 #{progit_v}.asc")
+    puts " -- Mobi output at #{progit_v}.mobi"
 
     repo = ENV['TRAVIS_REPO_SLUG']
     puts "Converting to PDF... (this one takes a while)"
     if (repo == "progit/progit2-zh")
       exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
-      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc")
+      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN #{progit_v}.asc")
     elsif (repo == "progit/progit2-ja")
       exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
-      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicJP progit.asc")
+      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicJP #{progit_v}.asc")
     else
-      exec_or_raise("bundle exec asciidoctor-pdf progit.asc 2>/dev/null")
+      exec_or_raise("bundle exec asciidoctor-pdf #{progit_v}.asc 2>/dev/null")
     end
-    puts " -- PDF output at progit.pdf"
+    puts " -- PDF output at #{progit_v}.pdf"
   end
 
   desc 'tag the repo with the latest version'
