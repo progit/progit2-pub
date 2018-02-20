@@ -164,7 +164,7 @@ namespace :book do
         content = File.read (filename)
         new_contents = content.gsub(/include::(.*?)asc/) {|match|
           "include::book/#{num}-#{title}/#{$1}asc"}
-        `git rm #{filename}`
+        `git rm -f #{filename}`
         File.open("#{chap}.asc", "w") {|file|
           file.puts "[##{chap}]\n"
           file.puts new_contents }
