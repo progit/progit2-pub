@@ -18,3 +18,4 @@ gem 'epubcheck'
 gem 'kindlegen'
 
 gem 'octokit'
+gem 'github_changelog_generator', github: 'Furtif/github-changelog-generator'
