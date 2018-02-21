@@ -39,6 +39,8 @@ namespace :book do
 
     puts "Converting to Mobi (kf8)..."
     exec_or_raise("bundle exec asciidoctor-epub3 -a ebook-format=kf8 #{progit_v}.asc")
+    # remove the fake epub that would shadow the really one
+    exec_or_raise("rm progit*kf8.epub")
     puts " -- Mobi output at #{progit_v}.mobi"
 
     repo = ENV['TRAVIS_REPO_SLUG']
