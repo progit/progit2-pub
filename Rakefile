@@ -125,6 +125,7 @@ namespace :book do
       end
     else
       p 'No interaction with GitHub'
+    end
   end
 
   desc 'convert book to asciidoctor compatibility'
