@@ -82,6 +82,9 @@ namespace :book do
     elsif (repo == "progit/progit2-ja")
       exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
       exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicJP #{progit_v}.asc")
+    elsif (repo == "progit/progit2-zh-tw")
+      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
+      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicTW #{progit_v}.asc")
     else
       exec_or_raise("bundle exec asciidoctor-pdf #{progit_v}.asc 2>/dev/null")
     end
