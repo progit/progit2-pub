@@ -112,7 +112,11 @@ namespace :book do
                                   ENV['TRAVIS_COMMIT'], 'commit',
                                   'Automatic build', 'automatic@no-domain.org',
                                   Time.now.utc.iso8601)
-        @octokit.create_ref(repo, "tags/#{new_version}", obj.sha)
+        begin
+          @octokit.create_ref(repo, "tags/#{new_version}", obj.sha)
+        rescue
+          p "the ref already exists ???"
+        end
         p "Created tag #{last_version}"
       elsif (ENV['TRAVIS_TAG'])
         version = ENV['TRAVIS_TAG']
