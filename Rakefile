@@ -44,7 +44,7 @@ namespace :book do
   task :build do
 
     puts "Generating contributors list"
-    exec_or_raise("git shortlog -s --all| grep -v -E '(Straub|Chacon)' | cut -f 2- | column -c 120 > book/contributors.txt")
+    exec_or_raise("git shortlog -s --all $translation_origin | grep -v -E '(Straub|Chacon)' | cut -f 2- | sort | column -c 120 > book/contributors.txt")
 
     # detect if the deployment is using glob
     travis = File.read(".travis.yml")
