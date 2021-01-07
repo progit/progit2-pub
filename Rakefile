@@ -1,6 +1,7 @@
 # coding: utf-8
 require 'octokit'
 require 'github_changelog_generator'
+require 'open-uri'
 
 def exec_or_raise(command)
   puts `#{command}`
@@ -39,58 +40,88 @@ module GitHubChangelogGenerator
   module_function :get_log
 end
 
-namespace :book do
-  desc 'build basic book formats'
-  task :build do
+module BookGenerator
+
+  def build_book(repo)
+
+    lang_match = repo.match(/progit2-([a-z-]*)/)
+    if lang_match
+      lang = lang_match[1]
+    else
+      lang = "en"
+    end
+
+    begin
+      l10n_text = open("https://raw.githubusercontent.com/asciidoctor/asciidoctor/master/data/locale/attributes-#{lang}.adoc").read
+      File.open('attributes.asc', 'w') { |file| file.puts l10n_text}
+      progit_txt = File.open('progit.asc').read
+      if not progit_txt.include?("attributes.asc")
+        progit_txt.gsub!('include::book/license.asc', "include::attributes.asc[]\ninclude::book/license.asc")
+        File.open('progit.asc', 'w') {|file| file.puts progit_txt }
+      end
+    rescue
+    end
+
+    version_string = ENV['TRAVIS_TAG'] || `git describe --tags`.chomp
+    if version_string.empty?
+      version_string = '0'
+    end
+
+    date_string = Time.now.strftime("%Y-%m-%d")
+    params = "--attribute revnumber='#{version_string}' --attribute revdate='#{date_string}' --attribute lang=#{lang} "
 
     puts "Generating contributors list"
     exec_or_raise("git shortlog -s --all $translation_origin | grep -v -E '(Straub|Chacon)' | cut -f 2- | sort | column -c 110 > book/contributors.txt")
 
-    # detect if the deployment is using glob
-    travis = File.read(".travis.yml")
-    version_string = ENV['TRAVIS_TAG'] || '0'
-    if travis.match(/file_glob/)
-      progit_v = "progit_v#{version_string}"
-    else
-      progit_v = "progit"
-    end
-    text = File.read('progit.asc')
-    new_contents = text.gsub("$$VERSION$$", version_string).gsub("$$DATE$$", Time.now.strftime("%Y-%m-%d"))
-    File.open("#{progit_v}.asc", "w") {|file| file.puts new_contents }
 
     puts "Converting to HTML..."
-    exec_or_raise("bundle exec asciidoctor -a data-uri #{progit_v}.asc")
-    puts " -- HTML output at #{progit_v}.html"
+    exec_or_raise("bundle exec asciidoctor -a data-uri #{params} progit.asc")
+    puts " -- HTML output at progit.html"
 
-    exec_or_raise("bundle exec htmlproofer --check-html --report-mismatched-tags #{progit_v}.html")
+    exec_or_raise("bundle exec htmlproofer --check-html --report-mismatched-tags progit.html")
 
     puts "Converting to EPub..."
-    exec_or_raise("bundle exec asciidoctor-epub3 #{progit_v}.asc")
-    puts " -- Epub output at #{progit_v}.epub"
+    exec_or_raise("bundle exec asciidoctor-epub3 #{params} progit.asc")
+    puts " -- Epub output at progit.epub"
 
-    exec_or_raise("epubcheck #{progit_v}.epub")
+    exec_or_raise("epubcheck progit.epub")
+
+    if (lang == "zh")
+      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
+      exec_or_raise("bundle exec asciidoctor-pdf #{params} -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN progit.asc")
+    elsif (lang == "ja")
+      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
+      exec_or_raise("bundle exec asciidoctor-pdf #{params} -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicJP progit.asc")
+    elsif (lang == "zh-tw")
+      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
+      exec_or_raise("bundle exec asciidoctor-pdf #{params} -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicTW progit.asc")
+    elsif (lang == "ko")
+      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
+      exec_or_raise("bundle exec asciidoctor-pdf #{params} -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicKR progit.asc")
+    else
+      exec_or_raise("bundle exec asciidoctor-pdf #{params} progit.asc 2>/dev/null")
+    end
+    puts " -- PDF output at progit.pdf"
+
+  end
+  module_function :build_book
+end
+namespace :book do
+  desc 'build basic book formats on Travis'
+  task :build do
 
     repo = ENV['TRAVIS_REPO_SLUG']
-    puts "Converting to PDF... (this one takes a while)"
-    if (repo == "progit/progit2-zh")
-      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
-      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicCN #{progit_v}.asc")
-    elsif (repo == "progit/progit2-ja")
-      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
-      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicJP #{progit_v}.asc")
-    elsif (repo == "progit/progit2-zh-tw")
-      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
-      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicTW #{progit_v}.asc")
-    elsif (repo == "progit/progit2-ko")
-      exec_or_raise("asciidoctor-pdf-cjk-kai_gen_gothic-install")
-      exec_or_raise("bundle exec asciidoctor-pdf -r asciidoctor-pdf-cjk -r asciidoctor-pdf-cjk-kai_gen_gothic -a pdf-style=KaiGenGothicKR #{progit_v}.asc")
-    else
-      exec_or_raise("bundle exec asciidoctor-pdf #{progit_v}.asc 2>/dev/null")
-    end
-    puts " -- PDF output at #{progit_v}.pdf"
+
+    BookGenerator.build_book(repo)
   end
 
-  desc 'tag the repo with the latest version'
+  desc 'build basic book formats on GitHub actions'
+  task :build_action do
+    repo = ENV['GITHUB_REPOSITORY']
+    BookGenerator.build_book(repo)
+  end
+
+  desc 'tag the repo with the latest version from Travis'
   task :tag do
     api_token = ENV['GITHUB_API_TOKEN']
     if ((api_token) && (ENV['TRAVIS_PULL_REQUEST'] == 'false'))
@@ -129,6 +160,11 @@ namespace :book do
     else
       p 'No interaction with GitHub'
     end
+  end
+
+  desc 'tag the repo with the latest version from GitHub Actions'
+  task :tag_gh do
+
   end
 
   desc 'convert book to asciidoctor compatibility'
