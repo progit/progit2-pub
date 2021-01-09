@@ -62,7 +62,7 @@ module BookGenerator
     rescue
     end
 
-    version_string = ENV['TRAVIS_TAG'] || `git describe --tags`.chomp
+    version_string = ENV['TRAVIS_TAG'] || ENV['GITHUB_VERSION'] || `git describe --tags`.chomp
     if version_string.empty?
       version_string = '0'
     end
