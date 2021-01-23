@@ -71,7 +71,7 @@ module BookGenerator
     params = "--attribute revnumber='#{version_string}' --attribute revdate='#{date_string}' --attribute lang=#{lang} "
 
     puts "Generating contributors list"
-    exec_or_raise("git shortlog -s --all $translation_origin | grep -v -E '(Straub|Chacon)' | cut -f 2- | sort | column -c 110 > book/contributors.txt")
+    exec_or_raise("git shortlog -s --all $translation_origin | grep -v -E '(Straub|Chacon|dependabot)' | cut -f 2- | sort | column -c 110 > book/contributors.txt")
 
 
     puts "Converting to HTML..."
