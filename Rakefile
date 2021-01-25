@@ -56,7 +56,7 @@ module BookGenerator
       File.open('attributes.asc', 'w') { |file| file.puts l10n_text}
       progit_txt = File.open('progit.asc').read
       if not progit_txt.include?("attributes.asc")
-        progit_txt.gsub!('include::book/license.asc', "include::attributes.asc[]\ninclude::book/license.asc")
+        progit_txt.gsub!(":doctype: book", "include::attributes.asc[]\n:doctype: book")
         File.open('progit.asc', 'w') {|file| file.puts progit_txt }
       end
     rescue
