@@ -52,14 +52,27 @@ module BookGenerator
     end
 
     begin
-      l10n_text = open("https://raw.githubusercontent.com/asciidoctor/asciidoctor/master/data/locale/attributes-#{lang}.adoc").read
-      File.open('attributes.asc', 'w') { |file| file.puts l10n_text}
+      lang_file = "attributes-#{lang}.adoc"
+
+      # Several language files in asciidoc repo have different naming
+      if (lang == "zh-tw")
+        lang_file = "attributes-zh_TW.adoc"
+      elsif (lang == "zh")
+        lang_file = "attributes-zh_CN.adoc"
+      elsif (lang == "pt-br")
+        lang_file = "attributes-pt_BR.adoc"
+      end
+
+      l10n_text = URI.open("https://raw.githubusercontent.com/asciidoctor/asciidoctor/master/data/locale/#{lang_file}").read
+      File.open(lang_file, 'w') {|file| file.puts l10n_text}
+
       progit_txt = File.open('progit.asc').read
-      if not progit_txt.include?("attributes.asc")
-        progit_txt.gsub!(":doctype: book", "include::attributes.asc[]\n:doctype: book")
-        File.open('progit.asc', 'w') {|file| file.puts progit_txt }
+      if not progit_txt.include?(lang_file)
+        progit_txt.gsub!(":doctype: book", "include::#{lang_file}[]\n:doctype: book")
+        File.open('progit.asc', 'w') {|file| file.puts progit_txt}
       end
     rescue
+      puts "[WARNING] Can not download attributes file #{lang_file}"
     end
 
     version_string = ENV['TRAVIS_TAG'] || ENV['GITHUB_VERSION'] || `git describe --tags`.chomp
@@ -73,17 +86,16 @@ module BookGenerator
     puts "Generating contributors list"
     exec_or_raise("git shortlog -s --all $translation_origin | grep -v -E '(Straub|Chacon|dependabot)' | cut -f 2- | sort | column -c 110 > book/contributors.txt")
 
-
     puts "Converting to HTML..."
     exec_or_raise("bundle exec asciidoctor -a data-uri #{params} progit.asc")
     puts " -- HTML output at progit.html"
-
+    puts " -- Validate HTML file progit.html"
     exec_or_raise("bundle exec htmlproofer --check-html --report-mismatched-tags progit.html")
 
     puts "Converting to EPub..."
     exec_or_raise("bundle exec asciidoctor-epub3 #{params} progit.asc")
     puts " -- Epub output at progit.epub"
-
+    puts " -- Validate EPub file progit.epub"
     exec_or_raise("epubcheck progit.epub")
 
     if (lang == "zh")
