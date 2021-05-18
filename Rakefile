@@ -121,9 +121,7 @@ end
 namespace :book do
   desc 'build basic book formats on Travis'
   task :build do
-
     repo = ENV['TRAVIS_REPO_SLUG']
-
     BookGenerator.build_book(repo)
   end
 
@@ -153,10 +151,10 @@ namespace :book do
                                   Time.now.utc.iso8601)
         begin
           @octokit.create_ref(repo, "tags/#{new_version}", obj.sha)
+          p "Created tag #{last_version}"
         rescue
-          p "the ref already exists ???"
+          raise "[ERROR] Can not create new tag #{new_version}. The ref already exists ???"
         end
-        p "Created tag #{last_version}"
       elsif (ENV['TRAVIS_TAG'])
         version = ENV['TRAVIS_TAG']
         changelog = GitHubChangelogGenerator.get_log do |config|
