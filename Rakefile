@@ -29,7 +29,7 @@ module GitHubChangelogGenerator
     options = Parser.default_options
     yield(options) if task_block
 
-    options[:user],options[:project] = ENV['TRAVIS_REPO_SLUG'].split('/')
+    options[:user], options[:project] = ENV['TRAVIS_REPO_SLUG'].split('/')
     options[:token] = ENV['GITHUB_API_TOKEN']
     options[:unreleased] = false
 
@@ -90,7 +90,7 @@ module BookGenerator
     exec_or_raise("bundle exec asciidoctor -a data-uri #{params} progit.asc")
     puts " -- HTML output at progit.html"
     puts " -- Validate HTML file progit.html"
-    exec_or_raise("bundle exec htmlproofer --check-html --report-mismatched-tags progit.html")
+    exec_or_raise("bundle exec htmlproofer progit.html")
 
     puts "Converting to EPub..."
     exec_or_raise("bundle exec asciidoctor-epub3 #{params} progit.asc")
