@@ -2,6 +2,7 @@
 require 'octokit'
 require 'github_changelog_generator'
 require 'open-uri'
+require 'html-proofer'
 
 def exec_or_raise(command)
   puts `#{command}`
@@ -90,7 +91,11 @@ module BookGenerator
     exec_or_raise("bundle exec asciidoctor -a data-uri #{params} progit.asc")
     puts " -- HTML output at progit.html"
     puts " -- Validate HTML file progit.html"
-    exec_or_raise("bundle exec htmlproofer progit.html")
+    HTMLProofer.check_file("progit.html", {
+                             typhoeus: {
+                               ssl_verifypeer: false,
+                               ssl_verifyhost: 0}
+                           }).run
 
     puts "Converting to EPub..."
     exec_or_raise("bundle exec asciidoctor-epub3 #{params} progit.asc")
