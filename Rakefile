@@ -94,7 +94,8 @@ module BookGenerator
     HTMLProofer.check_file("progit.html", {
                              typhoeus: {
                                ssl_verifypeer: false,
-                               ssl_verifyhost: 0}
+                               ssl_verifyhost: 0},
+                             enforce_https: false
                            }).run
 
     puts "Converting to EPub..."
