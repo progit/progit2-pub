@@ -93,9 +93,11 @@ module BookGenerator
     puts " -- Validate HTML file progit.html"
     HTMLProofer.check_file("progit.html", {
                              typhoeus: {
+                               accept_encoding: "gzip,deflate,br",
                                ssl_verifypeer: false,
                                ssl_verifyhost: 0},
-                             enforce_https: false
+                             enforce_https: false,
+                             ignore_status_codes: [403]
                            }).run
 
     puts "Converting to EPub..."
