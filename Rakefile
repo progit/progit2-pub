@@ -97,6 +97,7 @@ module BookGenerator
                                ssl_verifypeer: false,
                                ssl_verifyhost: 0},
                              enforce_https: false,
+                             check_external_hash: false,
                              ignore_status_codes: [403]
                            }).run
 
